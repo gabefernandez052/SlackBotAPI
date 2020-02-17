@@ -1,0 +1,17 @@
+C:\dev\SlackBotAPI\obj\Debug\netcoreapp3.1\SlackBotAPI.csprojAssemblyReference.cache
+C:\dev\SlackBotAPI\obj\Debug\netcoreapp3.1\staticwebassets\SlackBotAPI.StaticWebAssets.Manifest.cache
+C:\dev\SlackBotAPI\obj\Debug\netcoreapp3.1\staticwebassets\SlackBotAPI.StaticWebAssets.xml
+C:\dev\SlackBotAPI\obj\Debug\netcoreapp3.1\SlackBotAPI.MvcApplicationPartsAssemblyInfo.cache
+C:\dev\SlackBotAPI\obj\Debug\netcoreapp3.1\SlackBotAPI.AssemblyInfoInputs.cache
+C:\dev\SlackBotAPI\obj\Debug\netcoreapp3.1\SlackBotAPI.AssemblyInfo.cs
+C:\dev\SlackBotAPI\bin\Debug\netcoreapp3.1\appsettings.json
+C:\dev\SlackBotAPI\bin\Debug\netcoreapp3.1\Properties\launchSettings.json
+C:\dev\SlackBotAPI\bin\Debug\netcoreapp3.1\SlackBotAPI.exe
+C:\dev\SlackBotAPI\bin\Debug\netcoreapp3.1\SlackBotAPI.deps.json
+C:\dev\SlackBotAPI\bin\Debug\netcoreapp3.1\SlackBotAPI.runtimeconfig.json
+C:\dev\SlackBotAPI\bin\Debug\netcoreapp3.1\SlackBotAPI.runtimeconfig.dev.json
+C:\dev\SlackBotAPI\bin\Debug\netcoreapp3.1\SlackBotAPI.dll
+C:\dev\SlackBotAPI\bin\Debug\netcoreapp3.1\SlackBotAPI.pdb
+C:\dev\SlackBotAPI\obj\Debug\netcoreapp3.1\SlackBotAPI.RazorTargetAssemblyInfo.cache
+C:\dev\SlackBotAPI\obj\Debug\netcoreapp3.1\SlackBotAPI.dll
+C:\dev\SlackBotAPI\obj\Debug\netcoreapp3.1\SlackBotAPI.pdb
