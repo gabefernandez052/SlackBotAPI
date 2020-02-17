@@ -33,7 +33,7 @@ namespace SlackBotAPI.Controllers
                     var client = new HttpClient();
                     var response = new { text = $"Don't you mean {user.Value}?" };
 
-                    await client.PostAsync("https://hooks.slack.com/services/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",
+                    await client.PostAsync("",
                         new StringContent(JsonConvert.SerializeObject(response), System.Text.Encoding.UTF8, "application/json"));
                 }
             }
