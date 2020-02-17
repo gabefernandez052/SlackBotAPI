@@ -13,10 +13,10 @@ namespace SlackBotAPI
         public class EventInfo
         {
             [JsonProperty(PropertyName = "type")]
-            public string type { get; set; }
+            public string Type { get; set; }
 
             [JsonProperty(PropertyName = "user")]
-            public string user { get; set; }
+            public string User { get; set; }
 
             [JsonProperty(PropertyName = "text")]
             public string Text { get; set; }
