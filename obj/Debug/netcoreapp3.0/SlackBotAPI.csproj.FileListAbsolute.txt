@@ -16,4 +16,3 @@ C:\dev\SlackBotAPI\obj\Debug\netcoreapp3.0\SlackBotAPI.pdb
 C:\dev\SlackBotAPI\bin\Debug\netcoreapp3.0\Newtonsoft.Json.dll
 C:\dev\SlackBotAPI\obj\Debug\netcoreapp3.0\SlackBotAPI.csproj.CopyComplete
 C:\dev\SlackBotAPI\obj\Debug\netcoreapp3.0\SlackBotAPI.MvcApplicationPartsAssemblyInfo.cache
-C:\dev\SlackBotAPI\obj\Debug\netcoreapp3.0\SlackBotAPI.csprojAssemblyReference.cache
