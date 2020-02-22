@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Collections.Generic;
+using System.IO;
 
 namespace SlackBotAPI.Controllers
 {
@@ -14,10 +15,14 @@ namespace SlackBotAPI.Controllers
     public class SlackHandlerController : ControllerBase
     {
         private readonly AppSettings _appSettings;
+        private readonly string _slackBotEndPoint;
 
         public SlackHandlerController(IOptions<AppSettings> appSettings)
         {
             _appSettings = appSettings.Value;
+            _slackBotEndPoint = System.IO.File.ReadAllText(
+                Path.GetFullPath(
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\")) + "SlackWebHookEndPoint.txt");
         }
 
         [HttpPost]
@@ -33,7 +38,7 @@ namespace SlackBotAPI.Controllers
                     var client = new HttpClient();
                     var response = new { text = $"Don't you mean {user.Value}?" };
 
-                    await client.PostAsync("",
+                    await client.PostAsync(_slackBotEndPoint,
                         new StringContent(JsonConvert.SerializeObject(response), System.Text.Encoding.UTF8, "application/json"));
                 }
             }
