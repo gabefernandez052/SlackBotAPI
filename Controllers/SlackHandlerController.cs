@@ -1,14 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using SlackBotAPI.Models;
+using SlackBotAPI.Logic;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web;
-using System.Collections.Generic;
 
 namespace SlackBotAPI.Controllers
 {
@@ -17,23 +16,17 @@ namespace SlackBotAPI.Controllers
     public class SlackHandlerController : ControllerBase
     {
         private readonly AppSettings _appSettings;
-        private readonly int _randomSelector;
-
-        private readonly Dictionary<string,string> _secrets;
+        private readonly Dictionary<string, string> _secrets;
 
         /// <summary>
         /// ctor
         /// </summary>
         /// <param name="appSettings"></param>
         public SlackHandlerController(IOptions<AppSettings> appSettings)
-
         {
             _appSettings = appSettings.Value;
-
             _secrets = JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText(
                Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory + "secret.json")));
-
-            _randomSelector = new Random().Next(0, 25);
         }
 
         /// <summary>
@@ -45,20 +38,18 @@ namespace SlackBotAPI.Controllers
         public async void SlackBot(AppMention mention)
         {
             using var client = new HttpClient();
-
+            var slack = new Slack(_appSettings);
             try
             {
                 var response = new
                 {
-                    text = ValidRequest(mention.Event.Text)
-                    ? await GetHappyHourSuggestions()
+                    text = slack.ValidRequest(mention.Event.Text)
+                    ? await slack.GetHappyHourSuggestions(_secrets["yelpAPIKey"])
                     : $"Sorry, <@{mention.Event.User}>. I don't know what you mean. Please ask me about happy hour"
                 };
 
-                await client.PostAsync(_secrets["SlackBotEndPoint"],
+                await client.PostAsync(_secrets["slackBotEndPoint"],
                         new StringContent(JsonConvert.SerializeObject(response), System.Text.Encoding.UTF8, "application/json"));
-
-
             }
             catch (Exception e)
             {
@@ -68,63 +59,6 @@ namespace SlackBotAPI.Controllers
             {
                 client?.Dispose();
             }
-        }
-
-        /// <summary>
-        /// Check if user request prompts a yelp search
-        /// </summary>
-        /// <param name="requestText"></param>
-        /// <returns></returns>
-        private bool ValidRequest(string requestText)
-        {
-            return requestText.Contains("Happy Hour", StringComparison.OrdinalIgnoreCase) ||
-                   requestText.Contains("try again", StringComparison.OrdinalIgnoreCase) ||
-                   requestText.Contains("another one", StringComparison.OrdinalIgnoreCase);
-        }
-
-        /// <summary>
-        /// Get from Yelp.
-        /// </summary>
-        /// <returns></returns>
-        public async Task<string> GetHappyHourSuggestions()
-        {
-            YelpDto dtoResponse = null;
-            using var client = new HttpClient();
-
-            try
-            {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _secrets["yelpAPIKey"]);
-
-                var endPoint = $"https://api.yelp.com/v3/businesses/search" +
-                    $"?term={_appSettings.YelpParams.SearchTerm}" +
-                    $"&latitude={_appSettings.YelpParams.Latitude}" +
-                    $"&longitude={_appSettings.YelpParams.Longitude}" +
-                    $"&radius={_appSettings.YelpParams.Radius}" +
-                    $"&price={_appSettings.YelpParams.Price}" +
-                    $"&limit={_appSettings.YelpParams.Limit}";
-
-                await client.GetAsync(endPoint).ContinueWith((taskResponse) =>
-                    {
-                        var jsonString = taskResponse.Result.Content.ReadAsStringAsync();
-                        jsonString.Wait();
-                        dtoResponse = JsonConvert.DeserializeObject<YelpDto>(jsonString.Result);
-                    });
-            }
-            catch (Exception e)
-            {
-                //TODO - Add exception handling
-            }
-            finally
-            {
-                client?.Dispose();
-            }
-
-            var response = dtoResponse?.lstBusinesses[_randomSelector];
-
-            return $"How about {response.Name}. It's located at {response.Location.Address1} " +
-                $"{response.Location.City},{response.Location.State}. " +
-                $" Click the link for more details -> " +
-                $"<{response.Url}|{response.Name}>";
         }
 
         [HttpPost]
@@ -135,7 +69,7 @@ namespace SlackBotAPI.Controllers
             {
                 var baseUrl = "https://api.ritekit.com/v1/stats/auto-hashtag";
                 var client = new HttpClient();
-                
+
                 var query = HttpUtility.ParseQueryString(string.Empty);
                 query["client_id"] = _secrets["ritekitAPIKey"];
                 query["maxHashtags"] = "5";
@@ -145,7 +79,7 @@ namespace SlackBotAPI.Controllers
 
                 string getUrl = baseUrl + "?" + queryString;
                 Console.WriteLine(getUrl);
-                
+
                 // POST Example
                 // var values = new Dictionary<string, string>{
                 //     { "client_id", _secrets["ritekitAPIKey"] },
@@ -156,7 +90,7 @@ namespace SlackBotAPI.Controllers
 
                 // var content = new FormUrlEncodedContent(values);
                 // var response = await client.PostAsync("https://api.ritekit.com/v1/stats/auto-hashtag", content);
-                
+
                 var response = await client.GetAsync(getUrl);
                 var responseString = await response.Content.ReadAsStringAsync();
                 var jsonObj = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseString);

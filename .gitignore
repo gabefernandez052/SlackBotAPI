@@ -1,4 +1,4 @@
-SlackWebHookEndPoint.txt
-Yelp.txt
 secret.json
 bin/
+.vs/
+obj/
