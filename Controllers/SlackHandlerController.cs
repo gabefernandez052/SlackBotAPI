@@ -7,6 +7,8 @@ using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using System.Web;
+using System.Collections.Generic;
 
 namespace SlackBotAPI.Controllers
 {
@@ -15,9 +17,9 @@ namespace SlackBotAPI.Controllers
     public class SlackHandlerController : ControllerBase
     {
         private readonly AppSettings _appSettings;
-        private readonly string _slackBotEndPoint;
         private readonly int _randomSelector;
-        private readonly string _yelpAPIKey;
+
+        private readonly Dictionary<string,string> _secrets;
 
         /// <summary>
         /// ctor
@@ -28,11 +30,8 @@ namespace SlackBotAPI.Controllers
         {
             _appSettings = appSettings.Value;
 
-            _slackBotEndPoint = System.IO.File.ReadAllText(
-                Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory + @"Text\SlackWebHookEndPoint.txt"));
-
-            _yelpAPIKey = System.IO.File.ReadAllText(
-               Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory + @"Text\Yelp.txt"));
+            _secrets = JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText(
+               Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory + "secret.json")));
 
             _randomSelector = new Random().Next(0, 25);
         }
@@ -56,7 +55,7 @@ namespace SlackBotAPI.Controllers
                     : $"Sorry, <@{mention.Event.User}>. I don't know what you mean. Please ask me about happy hour"
                 };
 
-                await client.PostAsync(_slackBotEndPoint,
+                await client.PostAsync(_secrets["SlackBotEndPoint"],
                         new StringContent(JsonConvert.SerializeObject(response), System.Text.Encoding.UTF8, "application/json"));
 
 
@@ -94,7 +93,7 @@ namespace SlackBotAPI.Controllers
 
             try
             {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _yelpAPIKey);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _secrets["yelpAPIKey"]);
 
                 var endPoint = $"https://api.yelp.com/v3/businesses/search" +
                     $"?term={_appSettings.YelpParams.SearchTerm}" +
@@ -126,6 +125,50 @@ namespace SlackBotAPI.Controllers
                 $"{response.Location.City},{response.Location.State}. " +
                 $" Click the link for more details -> " +
                 $"<{response.Url}|{response.Name}>";
+        }
+
+        [HttpPost]
+        [Route("hashtag")]
+        public async Task<string> Hashtag(AppMention mention)
+        {
+            try
+            {
+                var baseUrl = "https://api.ritekit.com/v1/stats/auto-hashtag";
+                var client = new HttpClient();
+                
+                var query = HttpUtility.ParseQueryString(string.Empty);
+                query["client_id"] = _secrets["ritekitAPIKey"];
+                query["maxHashtags"] = "5";
+                query["hashtagPosition"] = "auto";
+                query["post"] = mention.Event.Text;
+                string queryString = query.ToString();
+
+                string getUrl = baseUrl + "?" + queryString;
+                Console.WriteLine(getUrl);
+                
+                // POST Example
+                // var values = new Dictionary<string, string>{
+                //     { "client_id", _secrets["ritekitAPIKey"] },
+                //     { "maxHashtags", "5" },
+                //     { "hashtagPosition", "auto" },
+                //     { "post", mention.Event.Text },
+                // };
+
+                // var content = new FormUrlEncodedContent(values);
+                // var response = await client.PostAsync("https://api.ritekit.com/v1/stats/auto-hashtag", content);
+                
+                var response = await client.GetAsync(getUrl);
+                var responseString = await response.Content.ReadAsStringAsync();
+                var jsonObj = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseString);
+                Console.WriteLine(jsonObj);
+                return jsonObj["post"];
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return e + "#Error";
+                //do something with caught exception
+            }
         }
     }
 }
