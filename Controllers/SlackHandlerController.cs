@@ -1,15 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using SlackBotAPI.Models;
 using System;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.Http;
-using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using SlackBotAPI.Models;
 
 namespace SlackBotAPI.Controllers
 {
@@ -27,10 +24,13 @@ namespace SlackBotAPI.Controllers
         /// </summary>
         /// <param name="appSettings"></param>
         public SlackHandlerController(IOptions<AppSettings> appSettings)
+
         {
             _appSettings = appSettings.Value;
+
             _slackBotEndPoint = System.IO.File.ReadAllText(
                 Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory + @"Text\SlackWebHookEndPoint.txt"));
+
             _yelpAPIKey = System.IO.File.ReadAllText(
                Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory + @"Text\Yelp.txt"));
 
@@ -49,24 +49,17 @@ namespace SlackBotAPI.Controllers
 
             try
             {
-                var response = new { text = mention.Event.Text.Contains("Happy Hour", StringComparison.OrdinalIgnoreCase) ||
-                                            mention.Event.Text.Contains("try again", StringComparison.OrdinalIgnoreCase)
-                    ? $"How about {await GetHappyHourSuggestions()}?" 
-                    : $"Sorry, <@{mention.Event.User}>. I don't know what you mean. Please ask me about happy hour" };
+                var response = new
+                {
+                    text = ValidRequest(mention.Event.Text)
+                    ? await GetHappyHourSuggestions()
+                    : $"Sorry, <@{mention.Event.User}>. I don't know what you mean. Please ask me about happy hour"
+                };
 
                 await client.PostAsync(_slackBotEndPoint,
                         new StringContent(JsonConvert.SerializeObject(response), System.Text.Encoding.UTF8, "application/json"));
 
-                #region Remove if unused
-                //TODO - Possibly remove
-                //if (!EqualityComparer<KeyValuePair<string, string>>.Default.Equals(user, default))
-                //{
-                //    var client = new HttpClient();
-                //    var response = new { text = $"Don't you mean {user.Value}?" };
-                //    await client.PostAsync(_slackBotEndPoint,
-                //        new StringContent(JsonConvert.SerializeObject(response), System.Text.Encoding.UTF8, "application/json"));
-                //}
-                #endregion
+
             }
             catch (Exception e)
             {
@@ -79,7 +72,19 @@ namespace SlackBotAPI.Controllers
         }
 
         /// <summary>
-        /// Get from Yelp. 
+        /// Check if user request prompts a yelp search
+        /// </summary>
+        /// <param name="requestText"></param>
+        /// <returns></returns>
+        private bool ValidRequest(string requestText)
+        {
+            return requestText.Contains("Happy Hour", StringComparison.OrdinalIgnoreCase) ||
+                   requestText.Contains("try again", StringComparison.OrdinalIgnoreCase) ||
+                   requestText.Contains("another one", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Get from Yelp.
         /// </summary>
         /// <returns></returns>
         public async Task<string> GetHappyHourSuggestions()
@@ -99,16 +104,14 @@ namespace SlackBotAPI.Controllers
                     $"&price={_appSettings.YelpParams.Price}" +
                     $"&limit={_appSettings.YelpParams.Limit}";
 
-                var task = client.GetAsync(endPoint).ContinueWith((taskResponse) =>
+                await client.GetAsync(endPoint).ContinueWith((taskResponse) =>
                     {
                         var jsonString = taskResponse.Result.Content.ReadAsStringAsync();
                         jsonString.Wait();
                         dtoResponse = JsonConvert.DeserializeObject<YelpDto>(jsonString.Result);
                     });
-
-                task.Wait();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 //TODO - Add exception handling
             }
@@ -116,8 +119,13 @@ namespace SlackBotAPI.Controllers
             {
                 client?.Dispose();
             }
-            
-            return dtoResponse?.lstBusinesses[_randomSelector].Name;
+
+            var response = dtoResponse?.lstBusinesses[_randomSelector];
+
+            return $"How about {response.Name}. It's located at {response.Location.Address1} " +
+                $"{response.Location.City},{response.Location.State}. " +
+                $" Click the link for more details -> " +
+                $"<{response.Url}|{response.Name}>";
         }
     }
 }

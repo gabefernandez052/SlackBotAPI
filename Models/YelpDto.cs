@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System.Collections.Generic;
 
 namespace SlackBotAPI.Models
 {
@@ -15,6 +14,9 @@ namespace SlackBotAPI.Models
 
             [JsonProperty(PropertyName = "location")]
             public LocationInfo Location { get; set; }
+
+            [JsonProperty(PropertyName = "url")]
+            public string Url { get; set; }
         }
 
         public class LocationInfo
@@ -37,6 +39,5 @@ namespace SlackBotAPI.Models
             [JsonProperty(PropertyName = "state")]
             public string State { get; set; }
         }
-
     }
 }
