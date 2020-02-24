@@ -3,11 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Content Remove="secret.json" />
-  </ItemGroup>
-
+  
   <ItemGroup>
     <None Remove=".gitignore" />
   </ItemGroup>
@@ -15,15 +11,4 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Text\SlackWebHookEndPoint.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Text\Yelp.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-
 </Project>
